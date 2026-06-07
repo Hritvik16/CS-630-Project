@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package distributed_sim;
+
+// The states of our deterministic Forest Fire model
+enum CellState {
+    EMPTY = 0;
+    TREE = 1;
+    FIRE = 2;
+}
+
+// The service hosted by each Worker node
+service WorkerNode {
+    // 1. Master tells the worker to compute the next tick
+    rpc ComputeTick (TickRequest) returns (TickResponse);
+    // 2. Peer worker sends its boundary data for conflict resolution
+    rpc ReceiveBoundary (BoundaryData) returns (BoundaryAck);
+}
+
+// Messages for the ComputeTick RPC
+message TickRequest {
+    int32 tick_number = 1;
+    int32 latency_ms = 2; // NEW: Artificial network lag
+}
+
+message TickResponse {
+    bool success = 1;
+    // We will track this to prove throughput efficiency for your report
+    float computation_time_ms = 2;
+}
+
+// Messages for the ReceiveBoundary RPC
+message BoundaryData {
+    int32 tick_number = 1;
+    string sender_id = 2;
+    // The list of cell states along the shared edge
+    repeated CellState edge_cells = 3;
+}
+
+message BoundaryAck {
+    bool conflict_detected = 1;
+    bool resolved_locally = 2;
+}
